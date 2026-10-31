@@ -8,9 +8,10 @@ x-app: &app
   environment: &app-env
     DATABASE_URL: postgres://ainotes:ainotes@db:5432/ainotes
     REDIS_URL: redis://redis:6379/0
-    # Dev: audio is saved to ./media on your computer (shared by web + worker through the
-    # volume below). No MinIO / S3 needed. To use S3-compatible storage, see README.
     USE_S3: "0"
+    # NEW: Adaption API for StudyForge
+    ADAPTION_API_KEY: ${ADAPTION_API_KEY}
+    ADAPTION_MODEL_ID: ${ADAPTION_MODEL_ID}
   volumes:
     - .:/app
   depends_on:
@@ -50,7 +51,7 @@ services:
       RUN_MIGRATIONS: "1"
     ports: ["8000:8000"]
 
-  worker:  # Celery worker: speech-to-text + LLM jobs
+  worker:
     <<: *app
     command: celery -A config worker -l info -Q default,ai --concurrency=2
     healthcheck:
@@ -59,7 +60,7 @@ services:
       timeout: 10s
       retries: 3
 
-  beat:  # periodic jobs (stuck-entry sweeper)
+  beat:
     <<: *app
     command: celery -A config beat -l info
 

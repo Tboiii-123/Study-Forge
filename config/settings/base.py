@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "apps.ai",
     "apps.sharing",
     "apps.search",
+    'apps.study_packs',
 ]
 
 MIDDLEWARE = [
