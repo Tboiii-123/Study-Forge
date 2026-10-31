@@ -23,7 +23,7 @@ urlpatterns = [
     path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema")),
     # Human-friendly public web page, viewable without the app or an account.
     path("share/<str:public_id>/", public_page, name="public-page"),
-       path('api/v1/', include('apps.study_packs.urls')),
+       path('api/', include('apps.study_packs.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
