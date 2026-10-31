@@ -1,4 +1,8 @@
-"""OpenAI-backed STT (Whisper) and LLM (chat completions, JSON mode)."""
+"""Groq-backed STT (Whisper) and LLM (chat completions, JSON mode).
+
+Drop-in replacement for openai_provider.py. Same interfaces, different backend.
+Place at: apps/ai/providers/groq_provider.py
+"""
 
 from __future__ import annotations
 
@@ -21,49 +25,49 @@ logger = logging.getLogger(__name__)
 
 
 def _client():
-    import openai  # lazy: not needed when using the fake provider
+    from groq import Groq  # lazy: not needed when using the fake provider
 
-    return openai.OpenAI(api_key=settings.OPENAI_API_KEY, timeout=120, max_retries=0)
+    return Groq(api_key=settings.GROQ_API_KEY, timeout=120, max_retries=0)
 
 
 def _translate_errors(fn):
     def wrapper(*a, **kw):
-        import openai
+        import groq
 
         try:
             return fn(*a, **kw)
         except (
-            openai.APITimeoutError,
-            openai.APIConnectionError,
-            openai.RateLimitError,
-            openai.InternalServerError,
+            groq.APITimeoutError,
+            groq.APIConnectionError,
+            groq.RateLimitError,
+            groq.InternalServerError,
         ) as e:
             raise TransientAIError(str(e)) from e
-        except openai.APIStatusError as e:
+        except groq.APIStatusError as e:
             raise PermanentAIError(f"{e.status_code}: {e}") from e
 
     return wrapper
 
 
-class OpenAISTTProvider(STTProvider):
+class GroqSTTProvider(STTProvider):
     @_translate_errors
     def transcribe(self, file, *, filename: str, mime: str = "") -> Transcript:
         resp = _client().audio.transcriptions.create(
-            model=settings.OPENAI_STT_MODEL,
+            model=settings.GROQ_STT_MODEL,
             file=(filename, file, mime or "application/octet-stream"),
             response_format="verbose_json",
         )
         return Transcript(
-            text=(resp.text or "").strip(),
+            text=(getattr(resp, "text", "") or "").strip(),
             language=getattr(resp, "language", "") or "",
             duration_seconds=getattr(resp, "duration", None),
         )
 
 
-class OpenAILLMProvider(LLMProvider):
+class GroqLLMProvider(LLMProvider):
     def _json(self, system: str, user: str) -> dict:
         resp = _client().chat.completions.create(
-            model=settings.OPENAI_LLM_MODEL,
+            model=settings.GROQ_LLM_MODEL,
             response_format={"type": "json_object"},
             temperature=0.2,
             messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],

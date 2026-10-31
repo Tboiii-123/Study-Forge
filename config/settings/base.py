@@ -231,3 +231,8 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "default"}},
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", default="INFO")},
 }
+
+
+GROQ_API_KEY = env("GROQ_API_KEY", default="")
+GROQ_LLM_MODEL = env("GROQ_LLM_MODEL", default="openai/gpt-oss-120b")
+GROQ_STT_MODEL = env("GROQ_STT_MODEL", default="whisper-large-v3-turbo")
